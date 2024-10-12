@@ -18,8 +18,7 @@ This project uses Puppeteer to automate the process of downloading wallpapers an
    ```bash
    git clone https://github.com/yourusername/steam-wallpaper-downloader.git
    cd steam-wallpaper-downloader
-
-- npm install
-- node download.js
+   npm install
+   node download.js
 
 Feel free to modify any sections as needed!
