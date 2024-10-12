@@ -1,0 +1,17 @@
+{
+  "name": "steam-wallpaper-downloader",
+  "version": "1.0.0",
+  "main": "download.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "electron": "^32.2.0",
+    "node-windows": "^1.0.0-beta.8",
+    "puppeteer": "^23.5.3"
+  },
+  "description": ""
+}
