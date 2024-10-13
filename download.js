@@ -90,7 +90,7 @@ async function isFileDownloaded(filePath) {
                 '--disable-gpu',
                 '--disable-infobars',
                 '--disable-dev-shm-usage',
-                '--window-size=1,1',
+                '--window-size=1024,720',
                 '--disable-background-timer-throttling',
                 '--disable-backgrounding-occluded-windows',
                 '--disable-renderer-backgrounding',
@@ -128,7 +128,7 @@ async function isFileDownloaded(filePath) {
                 const videoElement = videoElements[i];
                 await videoElement.click();
                 await page.waitForSelector('.FullModalOverlay', { visible: true });
-                await waitFor(500);
+                await waitFor(100);
 
                 const videoUrls = await page.evaluate(() => {
                     const sources = [];
