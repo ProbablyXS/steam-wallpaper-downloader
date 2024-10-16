@@ -21,4 +21,14 @@ This project uses Puppeteer to automate the process of downloading wallpapers an
    npm install
    node download.js
 
+2. If you want show the GUI
+   ```bash
+   npm run build
+   npm start
+
+## Showcase
+![image](https://github.com/user-attachments/assets/2674f9ab-8f58-46e6-8367-12753d698a44)
+
+
+
 Feel free to modify any sections as needed!
