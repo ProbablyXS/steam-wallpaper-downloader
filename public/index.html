@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self';">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Steam Wallpaper Downloader</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <h1>Steam Wallpaper Downloader</h1>
+        <button id="downloadBtn">Start Download</button>
+        <div id="log" class="log">
+            <!-- Example log messages, will be populated dynamically via JavaScript -->
+            <div class="info"><span class="icon">ℹ️</span> Waiting to start download...</div>
+            <div class="success"><span class="icon">✅</span> Successfully downloaded wallpaper</div>
+            <div class="error"><span class="icon">❌</span> Error downloading wallpaper</div>
+            <div class="warning"><span class="icon">⚠️</span> Warning: Low disk space</div>
+        </div>
+    </div>
+    <script src="renderer.js"></script> <!-- Link to the external script -->
+</body>
+</html>

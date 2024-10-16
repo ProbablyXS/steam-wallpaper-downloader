@@ -1,17 +1,59 @@
 {
   "name": "steam-wallpaper-downloader",
   "version": "1.0.0",
-  "main": "download.js",
+  "description": "A simple Electron application to download Steam wallpapers.",
+  "main": "public/main.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "start": "electron .",
+    "build": "electron-builder",
+    "package": "electron-builder --dir",
+    "dist": "electron-builder --windows"
   },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
+  "keywords": [
+    "electron",
+    "steam",
+    "wallpaper",
+    "downloader"
+  ],
+  "author": "Your Name",
+  "license": "MIT",
   "dependencies": {
-    "electron": "^32.2.0",
-    "node-windows": "^1.0.0-beta.8",
-    "puppeteer": "^23.5.3"
+    "puppeteer": "^20.0.0"
   },
-  "description": ""
+  "devDependencies": {
+    "electron": "^25.3.2",
+    "electron-builder": "^24.13.3"
+  },
+  "build": {
+    "appId": "com.example.steamwallpaperdownloader",
+    "productName": "Steam Wallpaper Downloader",
+    "directories": {
+      "buildResources": "public", 
+      "output": "dist"  
+    },
+    "files": [
+      "public/**/*" 
+    ],
+    "win": {
+      "target": [
+        "nsis"
+      ],
+      "icon": "public/icon.ico"  
+    },
+    "nsis": {
+      "oneClick": false,
+      "perMachine": true, 
+      "allowElevation": true,
+      "allowToChangeInstallationDirectory": true
+    },
+    "extraResources": [
+      {
+        "from": "public/",
+        "to": "resources/",
+        "filter": [
+          "**/*"
+        ]
+      }
+    ]
+  }
 }

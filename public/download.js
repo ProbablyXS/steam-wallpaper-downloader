@@ -3,6 +3,11 @@ const fs = require('fs');
 const path = require('path');
 const https = require('https');
 
+process.on('SIGINT', () => {
+    console.log('Terminating Puppeteer process...');
+    process.exit(0);
+});
+
 async function downloadFile(url, destination, count) {
     return new Promise((resolve, reject) => {
         const file = fs.createWriteStream(destination, { highWaterMark: 64 * 1024 });
@@ -18,7 +23,7 @@ async function downloadFile(url, destination, count) {
                 resolve();
             });
         }).on('error', err => {
-            fs.unlink(destination);
+            fs.unlink(destination, () => {}); // Handle the callback for fs.unlink
             console.error('Error downloading file:', err.message);
             reject(err);
         });
@@ -56,7 +61,7 @@ async function scrollToBottom(page) {
 
         // Wait if 20 videos have been loaded
         if (currentVideoCount >= previousVideoCount + 20) {
-            await waitFor(2000); // Wait for 2 seconds before next scroll
+            await waitFor(2000); // Wait for 2 seconds before the next scroll
         }
 
         if (currentVideoCount === previousVideoCount) break; // Stop if no new videos are loaded
@@ -80,8 +85,9 @@ async function isFileDownloaded(filePath) {
     const overallStartTime = Date.now(); // Start overall stopwatch
 
     try {
+        // Launch Puppeteer using the new headless mode, with a custom cache directory to prevent access issues
         browser = await puppeteer.launch({
-            headless: true,
+            headless: 'new', // Use the new headless mode
             args: [
                 '--no-sandbox',
                 '--disable-setuid-sandbox',
@@ -96,12 +102,15 @@ async function isFileDownloaded(filePath) {
                 '--disable-renderer-backgrounding',
                 '--remote-debugging-port=9222',
                 '--mute-audio',
-                '--start-maximized'
+                '--start-maximized',
+                '--user-data-dir=' + path.join(__dirname, 'puppeteer-cache') // Custom cache directory to avoid errors
             ],
             ignoreHTTPSErrors: true
         });
+
         const page = await browser.newPage();
 
+        // Set a user agent to mimic real browsing
         await page.setUserAgent('Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/89.0.4389.82 Safari/537.36');
         await page.goto('https://store.steampowered.com/points/shop/c/backgrounds/cluster/0', { waitUntil: 'networkidle2' });
 
