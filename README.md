@@ -1,5 +1,8 @@
 # steam-wallpaper-downloader
 
+## Showcase
+![image](https://github.com/user-attachments/assets/2674f9ab-8f58-46e6-8367-12753d698a44)
+
 ## Description
 This project uses Puppeteer to automate the process of downloading wallpapers and video backgrounds from the Steam Points Shop. The script handles cookie consent popups, scrolls through the page to load all available items, and downloads each item in the highest quality available.
 
@@ -25,9 +28,6 @@ This project uses Puppeteer to automate the process of downloading wallpapers an
    ```bash
    npm run build
    npm start
-
-## Showcase
-![image](https://github.com/user-attachments/assets/2674f9ab-8f58-46e6-8367-12753d698a44)
 
 
 
