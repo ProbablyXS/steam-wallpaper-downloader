@@ -23,7 +23,7 @@ async function downloadFile(url, destination, count) {
                 resolve();
             });
         }).on('error', err => {
-            fs.unlink(destination, () => {}); // Handle the callback for fs.unlink
+            fs.unlink(destination, () => { }); // Handle the callback for fs.unlink
             console.error('Error downloading file:', err.message);
             reject(err);
         });
@@ -46,33 +46,20 @@ async function closeCookiePopup(page) {
     }
 }
 
-async function scrollToBottom(page) {
-    let previousVideoCount = 0;
-    let currentVideoCount = 0;
-
-    while (true) {
-        await page.evaluate(() => {
-            window.scrollBy(0, window.innerHeight);
+async function hideVideoElements(page) {
+    await page.evaluate(() => {
+        const videos = document.querySelectorAll('video[playsinline][loop][autoplay]');
+        videos.forEach(video => {
+            video.style.display = 'none'; // Hides the video
         });
-
-        await waitFor(2000); // Wait for new content to load
-
-        currentVideoCount = (await fetchVideos(page)).length; // Get the current video count
-
-        // Wait if 20 videos have been loaded
-        if (currentVideoCount >= previousVideoCount + 20) {
-            await waitFor(2000); // Wait for 2 seconds before the next scroll
-        }
-
-        if (currentVideoCount === previousVideoCount) break; // Stop if no new videos are loaded
-        previousVideoCount = currentVideoCount;
-
-        console.log(`Loaded ${currentVideoCount} videos so far.`);
-    }
+        console.log(`Hid ${videos.length} video(s).`);
+    });
 }
 
-async function fetchVideos(page) {
-    return await page.$$('video[playsinline][loop][autoplay]');
+async function scrollToBottomUsingTab(page) {
+    await page.keyboard.press('Tab'); // Simulate pressing the Tab key
+    await hideVideoElements(page);
+    await waitFor(10); // Wait for new content to load
 }
 
 async function isFileDownloaded(filePath) {
@@ -82,12 +69,14 @@ async function isFileDownloaded(filePath) {
 (async () => {
     let browser;
     let downloadCount = 0;
+    let total = 0;
+    let lastProcessedIndex = 0; // Track the last processed index
     const overallStartTime = Date.now(); // Start overall stopwatch
 
     try {
-        // Launch Puppeteer using the new headless mode, with a custom cache directory to prevent access issues
+        // Launch Puppeteer
         browser = await puppeteer.launch({
-            headless: 'new', // Use the new headless mode
+            headless: 'none', // Use headless mode if desired
             args: [
                 '--no-sandbox',
                 '--disable-setuid-sandbox',
@@ -103,28 +92,32 @@ async function isFileDownloaded(filePath) {
                 '--remote-debugging-port=9222',
                 '--mute-audio',
                 '--start-maximized',
-                '--user-data-dir=' + path.join(__dirname, 'puppeteer-cache') // Custom cache directory to avoid errors
+                '--user-data-dir=' + path.join(__dirname, 'puppeteer-cache')
             ],
             ignoreHTTPSErrors: true
         });
 
         const page = await browser.newPage();
 
-        // Set a user agent to mimic real browsing
+        // Set the viewport size
+        await page.setViewport({ width: 1280, height: 720 });
+
+        // Set a user agent
         await page.setUserAgent('Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/89.0.4389.82 Safari/537.36');
         await page.goto('https://store.steampowered.com/points/shop/c/backgrounds/cluster/0', { waitUntil: 'networkidle2' });
 
         await waitFor(2000); // Wait for initial load
         await closeCookiePopup(page); // Close cookie consent popup
-        await scrollToBottom(page); // Scroll down to load all videos
-
-        let videoElements;
+        await hideVideoElements(page); // Hide videos
+        await scrollToBottomUsingTab(page); // Scroll down to load all videos
+        await waitFor(1000); // Wait for initial load
 
         while (true) {
-            videoElements = await fetchVideos(page);
-            console.log(`Found ${videoElements.length} videos available for download.`);
+            // Select all clickable elements
+            const clickableElements = await page.$$('.padding-top-large._1hyVDUTu00_a_5XtwVOdU2.Panel.Focusable');
+            console.log(`Found ${clickableElements.length - 1} clickable elements.`);
 
-            if (videoElements.length === 0) break; // Break if no videos are found
+            if (clickableElements.length === 0) break; // Break if no elements are found
 
             const downloadDir = path.join(__dirname, 'downloads');
             if (!fs.existsSync(downloadDir)) {
@@ -133,53 +126,66 @@ async function isFileDownloaded(filePath) {
 
             const downloadPromises = [];
 
-            for (let i = 0; i < videoElements.length; i++) {
-                const videoElement = videoElements[i];
-                await videoElement.click();
-                await page.waitForSelector('.FullModalOverlay', { visible: true });
-                await waitFor(100);
+            // Start from the last processed index
+            // for (let i = lastProcessedIndex; i < clickableElements.length - 1; i++) {
+            const element = clickableElements[0];
 
-                const videoUrls = await page.evaluate(() => {
-                    const sources = [];
-                    const video = document.querySelector('.FullModalOverlay video[playsinline][loop][autoplay]');
-                    if (video) {
-                        const sourceElements = Array.from(video.querySelectorAll('source'));
-                        sourceElements.forEach(source => {
-                            if (source.src) {
-                                sources.push(source.src);
-                            }
-                        });
-                    }
-                    return sources;
-                });
+            // Click on the div that opens the modal
+            await element.click(); // Click on the specified div to open the modal
 
-                if (videoUrls.length > 0) {
-                    const highestQualityUrl = videoUrls[0];
-                    const videoName = path.basename(highestQualityUrl);
-                    const videoPath = path.join(downloadDir, videoName);
+            await page.waitForSelector('.FullModalOverlay', { visible: true });
+            await waitFor(100);
 
-                    if (await isFileDownloaded(videoPath)) {
-                        console.log(`Skipping ${videoName}, already downloaded.`);
-                        await page.click('button._3Ju8vy_foEPg9ILmy2-htb._1hcJa9ylImmFKuHsfilos.Focusable');
-                        continue;
-                    }
+            const videoUrls = await page.evaluate(() => {
+                const sources = [];
+                const video = document.querySelector('.FullModalOverlay video[playsinline][loop][autoplay]');
+                if (video) {
+                    const sourceElements = Array.from(video.querySelectorAll('source'));
+                    sourceElements.forEach(source => {
+                        if (source.src) {
+                            sources.push(source.src);
+                        }
+                    });
+                }
+                return sources;
+            });
 
+            if (videoUrls.length > 0) {
+                const highestQualityUrl = videoUrls[0];
+                const videoName = path.basename(highestQualityUrl);
+                const videoPath = path.join(downloadDir, videoName);
+
+                if (await isFileDownloaded(videoPath)) {
+                    console.log(`Skipping ${videoName}, already downloaded.`);
+                } else {
                     downloadCount++;
                     downloadPromises.push(downloadFile(highestQualityUrl, videoPath, downloadCount));
                 }
-
-                const closeButtonSelector = 'button._3Ju8vy_foEPg9ILmy2-htb._1hcJa9ylImmFKuHsfilos.Focusable';
-                await page.waitForSelector(closeButtonSelector);
-                await page.click(closeButtonSelector);
-                await waitFor(500);
-                
-                videoElements = await fetchVideos(page); // Refresh video elements
             }
+
+            const closeButtonSelector = 'button._3Ju8vy_foEPg9ILmy2-htb._1hcJa9ylImmFKuHsfilos.Focusable';
+            await page.waitForSelector(closeButtonSelector);
+            await page.click(closeButtonSelector);
+
+            // Remove the element using page.evaluate
+            await page.evaluate(element => {
+                if (element) {
+                    element.remove();
+                }
+            }, element);
+
+            await waitFor(10);
+
+            // Update lastProcessedIndex after processing each clickable element
+            // lastProcessedIndex = i + 1; // Move to the next element
 
             await Promise.all(downloadPromises);
 
             // Scroll to load more videos after processing the current batch
-            await scrollToBottom(page);
+            await scrollToBottomUsingTab(page);
+
+            total++;
+            console.log(`Total videos: ${total}`);
         }
 
         const overallEndTime = Date.now();

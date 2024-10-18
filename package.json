@@ -18,6 +18,7 @@
   "author": "Your Name",
   "license": "MIT",
   "dependencies": {
+    "async-mutex": "^0.5.0",
     "puppeteer": "^20.0.0"
   },
   "devDependencies": {
@@ -28,21 +29,21 @@
     "appId": "com.example.steamwallpaperdownloader",
     "productName": "Steam Wallpaper Downloader",
     "directories": {
-      "buildResources": "public", 
-      "output": "dist"  
+      "buildResources": "public",
+      "output": "dist"
     },
     "files": [
-      "public/**/*" 
+      "public/**/*"
     ],
     "win": {
       "target": [
         "nsis"
       ],
-      "icon": "public/icon.ico"  
+      "icon": "public/icon.ico"
     },
     "nsis": {
       "oneClick": false,
-      "perMachine": true, 
+      "perMachine": true,
       "allowElevation": true,
       "allowToChangeInstallationDirectory": true
     },

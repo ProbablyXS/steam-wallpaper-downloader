@@ -70,7 +70,7 @@ ipcMain.on('toggle-download', (event) => {
         console.log('Starting download...');
 
         const downloadScriptPath = path.join(__dirname, 'download.js');
-        downloadProcess = spawn(process.execPath, [downloadScriptPath], { stdio: 'pipe' });
+        downloadProcess = spawn(process.execPath, ['--expose-gc', downloadScriptPath], { stdio: 'pipe' });
 
         downloadProcess.stdout.on('data', (data) => {
             const message = data.toString().trim();
